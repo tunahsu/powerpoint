@@ -1,3 +1,4 @@
+import os
 from mcp.server import Server, NotificationOptions
 from mcp.server.models import InitializationOptions
 import mcp.server.stdio
@@ -7,7 +8,8 @@ from pptx import Presentation
 import logging
 from .presentation_manager import PresentationManager
 from .chart_manager import ChartManager
-import os
+from .vision_manager import VisionManager
+
 logger = logging.getLogger('mcp_powerpoint_server')
 logger.info("Starting MCP Powerpoint Server")
 
@@ -31,6 +33,7 @@ async def main(folder_path):
     logger.info(f"Starting Powerpoint MCP Server")
     presentation_manager = PresentationManager()
     chart_manager = ChartManager()
+    vision_manager = VisionManager()
     server = Server("powerpoint-server")
     logger.debug("Registering Handlers")
     path = folder_path
@@ -347,7 +350,7 @@ async def main(folder_path):
                 raise ValueError("Missing required arguments")
 
             try:
-                saved_path = await presentation_manager.generate_and_save_image(prompt, str(safe_file_path))
+                saved_path = await vision_manager.generate_and_save_image(prompt, str(safe_file_path))
                 return [
                     types.TextContent(
                         type="text",
