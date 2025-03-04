@@ -87,8 +87,24 @@ On Windows: `%APPDATA%/Claude/claude_desktop_config.json`
     }
 ```
 
+### Usage Examples
+
+```
+Create a presentation about fish, create some images and include tables and charts
+```
+
+```
+Create a presentation about the attached paper. Please use the following images in the presentation:
+author.jpeg
+```
+
+Assuming you have SQLite MCP Server installed.
+```
+Review 2024 Sales Data table. Create a presentation showing current trends, use tables and charts as appropriate
+
+```
 
 
-## License
+# License
 
 This MCP server is licensed under the MIT License. This means you are free to use, modify, and distribute the software, subject to the terms and conditions of the MIT License. For more details, please see the LICENSE file in the project repository.
