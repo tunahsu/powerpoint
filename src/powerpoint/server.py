@@ -114,8 +114,8 @@ async def main(folder_path):
                         "content": {
                             "type": "string",
                             "description": "Content/body text of the slide. "
-                                           "Separate main points with a single carriage return."
-                                           "Make sub-points with tab."
+                                           "Separate main points with a single carriage return character."
+                                           "Make sub-points with tab character."
                                            "Do not use bullet points, asterisks or dashes for points."
                                            "Max main points is 4"
                         },

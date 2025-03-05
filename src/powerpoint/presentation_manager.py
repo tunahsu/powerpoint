@@ -12,6 +12,61 @@ class PresentationManager:
     def __init__(self):
         self.presentations: Dict[str, Any] = {}
 
+    def _add_formatted_bullets(self, text_frame, text_block):
+        """
+        Process a text block and add paragraphs with proper bullet indentation
+        using ASCII code detection:
+        - ASCII 10 (LF) or ASCII 13 (CR) or combination for new lines (main bullets)
+        - ASCII 9 (HT) for tab indentation (sub-bullets)
+
+        Args:
+            text_frame: The PowerPoint text frame to add text to
+            text_block: String of text to process
+        """
+        # First, normalize all line endings to a single format
+        # Replace CR+LF (Windows) with a single marker
+        normalized_text = text_block.replace('\r\n', '\n')
+        # Replace any remaining CR (old Mac) with LF
+        normalized_text = normalized_text.replace('\r', '\n')
+
+        # Split the text block into lines using ASCII 10 (LF)
+        lines = normalized_text.split('\n')
+
+        # Clear any existing text
+        if text_frame.paragraphs:
+            p = text_frame.paragraphs[0]
+            p.text = ""
+        else:
+            p = text_frame.add_paragraph()
+
+        # Process the first line separately (if it exists)
+        if lines and lines[0].strip():
+            first_line = lines[0]
+            # Count leading tabs (ASCII 9) to determine indentation level
+            level = 0
+            while first_line and ord(first_line[0]) == 9:  # ASCII 9 is HT (tab)
+                level += 1
+                first_line = first_line[1:]
+
+            p.text = first_line.strip()
+            p.level = level
+
+        # Process remaining lines
+        for line in lines[1:]:
+            if not line.strip():
+                continue  # Skip empty lines
+
+            # Count leading tabs (ASCII 9) to determine indentation level
+            level = 0
+            while line and ord(line[0]) == 9:  # ASCII 9 is HT (tab)
+                level += 1
+                line = line[1:]
+
+            # Add the paragraph with proper indentation
+            p = text_frame.add_paragraph()
+            p.text = line.strip()
+            p.level = level
+
     def add_picture_with_caption_slide(self, presentation_name: str, title: str,
                                        image_path: str, caption_text: str) -> Slide:
         """
@@ -56,7 +111,11 @@ class PresentationManager:
 
         # Set the content
         content_shape = slide.placeholders[1]
-        content_shape.text = content
+        #content_shape.text = content
+        # Get the content placeholder and add our formatted text
+
+        text_frame = content_shape.text_frame
+        self._add_formatted_bullets(text_frame, content)
         return slide
 
     def add_table_slide(self, presentation_name: str, title: str, headers: str, rows: str) -> Slide:
