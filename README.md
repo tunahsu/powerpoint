@@ -62,10 +62,31 @@ A folder_path is required. All presentations and images will be saved to this fo
 
 ### Install
 
+#### Make sure you have UV installed
+
+MacOS/Linux
+```
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Windows
+```
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+#### Clone the repo
+
+```
+git clone https://github.com/supercurses/powerpoint.git
+```
+
 #### Claude Desktop
 
 On MacOS: `~/Library/Application\ Support/Claude/claude_desktop_config.json`
 On Windows: `%APPDATA%/Claude/claude_desktop_config.json`
+
+- ```--directory```: the path where you cloned the repo above
+- ```--folder-path```: the path where powerpoint decks and images will be saved to. Also the path where you should place any images you want the MCP server to use.
 
 
 ```
