@@ -13,6 +13,9 @@ The server implements multiple tools:
 - ```add-slide-title-only```: Adds a title slide to the presentation
   - Takes "presentation_name" and "title" as required string arguments
   - Creates a title slide with "title" and adds it to presentation
+- ```add-slide-section-header```: Adds a section header slide to the presentation
+  - Takes "presentation_name" and "header" as required string arguments
+  - Creates a section header slide with "header" (and optionally "subtitle") and adds it to the presentation
 - ```add-slide-title-content```: Adds a title with content slide to the presentation
   - Takes "presentation_name", "title", "content" as required string arguments
   - Creates a title with content slide with "title" and "content" and adds it to presentation
