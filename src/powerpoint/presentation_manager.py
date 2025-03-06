@@ -111,7 +111,51 @@ class PresentationManager:
 
         return slide
 
+    def add_comparison_slide(self, presentation_name: str, title: str, left_side_title: str, left_side_content: str,
+                             right_side_title: str, right_side_content: str ):
+        """
+        Create a section header slide for the given presentation
 
+        Args:
+            presentation_name: The presentation to add the slide to
+            title: The title of the slide
+            left_side_title: The title of the left hand side content
+            left_side_content: The body content for the left hand side
+            right_side_title: The title of the right hand side content
+            right_side_content: The body content for the right hand side
+        """
+        try:
+            prs = self.presentations[presentation_name]
+        except KeyError as e:
+            raise ValueError(f"Presentation '{presentation_name}' not found")
+        slide_master = prs.slide_master
+
+        # Add a new slide with layout
+        slide_layout = prs.slide_layouts[self.SLIDE_LAYOUT_COMPARISON]
+        slide = prs.slides.add_slide(slide_layout)
+
+        # Set the title
+        title_shape = slide.shapes.title
+        title_shape.text = title
+
+        # Build the left hand content
+        content_shape = slide.placeholders[1]
+        text_frame = content_shape.text_frame
+        text_frame.text = left_side_title
+
+        content_shape = slide.placeholders[2]
+        text_frame = content_shape.text_frame
+        text_frame.text = left_side_content
+
+        # Build the right hand content
+        content_shape = slide.placeholders[3]
+        text_frame = content_shape.text_frame
+        text_frame.text = right_side_title
+
+        content_shape = slide.placeholders[4]
+        text_frame = content_shape.text_frame
+        text_frame.text = right_side_content
+        return slide
 
     def add_picture_with_caption_slide(self, presentation_name: str, title: str,
                                        image_path: str, caption_text: str) -> Slide:

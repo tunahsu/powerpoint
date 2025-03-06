@@ -148,6 +148,50 @@ async def main(folder_path):
                 },
             ),
             types.Tool(
+                name="add-slide-comparison",
+                description="Add a new a comparison slide with title and comparison content. Use when you wish to "
+                            "compare two concepts",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "presentation_name": {
+                            "type": "string",
+                            "description": "Name of the presentation to add the slide to",
+                        },
+                        "title": {
+                            "type": "string",
+                            "description": "Title of the slide",
+                        },
+                        "left_side_title": {
+                            "type": "string",
+                            "description": "Title of the left concept",
+                        },
+                        "left_side_content": {
+                            "type": "string",
+                            "description": "Content/body text of left concept. "
+                                           "Separate main points with a single carriage return character."
+                                           "Make sub-points with tab character."
+                                           "Do not use bullet points, asterisks or dashes for points."
+                                           "Max main points is 4"
+                        },
+                        "right_side_title": {
+                            "type": "string",
+                            "description": "Title of the right concept",
+                        },
+                        "right_side_content": {
+                            "type": "string",
+                            "description": "Content/body text of right concept. "
+                                           "Separate main points with a single carriage return character."
+                                           "Make sub-points with tab character."
+                                           "Do not use bullet points, asterisks or dashes for points."
+                                           "Max main points is 4"
+                        },
+                    },
+                    "required": ["presentation_name", "title", "left_side_title", "left_side_content",
+                                 "right_side_title", "right_side_content"],
+                },
+            ),
+            types.Tool(
                 name="add-slide-title-with-table",
                 description="Add a new slide with a title and table containing the provided data",
                 inputSchema={
@@ -388,6 +432,32 @@ async def main(folder_path):
                         text=f"Failed to generate image: {str(e)}"
                     )
                 ]
+        elif name == "add-slide-comparison":
+            # Get arguments
+            presentation_name = arguments["presentation_name"]
+            title = arguments["title"]
+            left_side_title = arguments["left_side_title"]
+            left_side_content = arguments["left_side_content"]
+            right_side_title = arguments["right_side_title"]
+            right_side_content = arguments["right_side_content"]
+
+            if not all([presentation_name, title, left_side_title, left_side_content,
+                        right_side_title, right_side_content]):
+                raise ValueError("Missing required arguments")
+
+            if presentation_name not in presentation_manager.presentations:
+                raise ValueError(f"Presentation not found: {presentation_name}")
+            try:
+                slide = presentation_manager.add_comparison_slide(presentation_name, title, left_side_title,
+                                                                  left_side_content, right_side_title, right_side_content)
+            except Exception as e:
+                raise ValueError(f"Unable to add comparison slide to {presentation_name}.pptx")
+
+            return [types.TextContent(
+                type="text",
+                text=f"Successfully added comparison slide {title} to {presentation_name}.pptx"
+            )]
+
         elif name == "add-slide-picture-with-caption":
 
             # Get arguments
