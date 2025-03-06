@@ -9,6 +9,18 @@ from typing import Literal, Union, List, Dict, Any
 ChartTypes = Literal["bar", "line", "pie", "scatter", "area"]
 
 class PresentationManager:
+    # Slide layout constants
+    SLIDE_LAYOUT_TITLE = 0
+    SLIDE_LAYOUT_TITLE_AND_CONTENT = 1
+    SLIDE_LAYOUT_SECTION_HEADER = 2
+    SLIDE_LAYOUT_TWO_CONTENT = 3
+    SLIDE_LAYOUT_COMPARISON = 4
+    SLIDE_LAYOUT_TITLE_ONLY = 5
+    SLIDE_LAYOUT_BLANK = 6
+    SLIDE_LAYOUT_CONTENT_WITH_CAPTION = 7
+    SLIDE_LAYOUT_PICTURE_WITH_CAPTION = 8
+
+
     def __init__(self):
         self.presentations: Dict[str, Any] = {}
 
@@ -79,7 +91,7 @@ class PresentationManager:
         slide_master = prs.slide_master
 
         # Add a new slide with layout 8 (Caption with Picture)
-        slide_layout = prs.slide_layouts[8]
+        slide_layout = prs.slide_layouts[self.SLIDE_LAYOUT_PICTURE_WITH_CAPTION]
         slide = prs.slides.add_slide(slide_layout)
 
         # Set the title
@@ -102,7 +114,7 @@ class PresentationManager:
             raise ValueError(f"Presentation '{presentation_name}' not found")
         slide_master = prs.slide_master
         # Add a slide with title and content
-        slide_layout = prs.slide_layouts[1]  # Use layout with title and content
+        slide_layout = prs.slide_layouts[self.SLIDE_LAYOUT_TITLE_AND_CONTENT]  # Use layout with title and content
         slide = prs.slides.add_slide(slide_layout)
 
         # Set the title
@@ -125,7 +137,7 @@ class PresentationManager:
         except KeyError as e:
             raise ValueError(f"Presentation '{presentation_name}' not found")
 
-        slide_layout = prs.slide_layouts[5]  # Use layout with title only
+        slide_layout = prs.slide_layouts[self.SLIDE_LAYOUT_TITLE_ONLY]
         slide = prs.slides.add_slide(slide_layout)
 
         # Set the title
@@ -184,7 +196,7 @@ class PresentationManager:
             raise ValueError(f"Presentation '{presentation_name}' not found")
 
         # Add a slide with title and content
-        slide_layout = prs.slide_layouts[0]  # Use layout with title only
+        slide_layout = prs.slide_layouts[self.SLIDE_LAYOUT_TITLE]
         slide = prs.slides.add_slide(slide_layout)
 
         # Set the title
