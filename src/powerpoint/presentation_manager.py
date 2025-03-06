@@ -79,6 +79,40 @@ class PresentationManager:
             p.text = line.strip()
             p.level = level
 
+    def add_section_header_slide(self, presentation_name: str, header: str, subtitle: str):
+        """
+        Create a section header slide for the given presentation
+
+        Args:
+            presentation_name: The presentation to add the slide to
+            header: The section header to use
+            subtitle: The subtitle of the section header to use
+        """
+        try:
+            prs = self.presentations[presentation_name]
+        except KeyError as e:
+            raise ValueError(f"Presentation '{presentation_name}' not found")
+        slide_master = prs.slide_master
+
+        # Add a new slide with layout
+        slide_layout = prs.slide_layouts[self.SLIDE_LAYOUT_SECTION_HEADER]
+        slide = prs.slides.add_slide(slide_layout)
+
+        # Set the subtitle
+        if subtitle:
+            subtitle_shape = slide.placeholders[1]
+            text_frame = subtitle_shape.text_frame
+            text_frame.text = subtitle
+
+        # Set the section header
+        if header:
+            header_shape = slide.shapes.title
+            header_shape.text = header
+
+        return slide
+
+
+
     def add_picture_with_caption_slide(self, presentation_name: str, title: str,
                                        image_path: str, caption_text: str) -> Slide:
         """

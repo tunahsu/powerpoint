@@ -98,6 +98,30 @@ async def main(folder_path):
                 },
             ),
             types.Tool(
+                name="add-slide-section-header",
+                description="This tool adds a section header (a.k.a segue) slide to the presentation you are working on. The tool doesn't "
+                            "return anything. It requires the presentation_name to work on.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "presentation_name": {
+                            "type": "string",
+                            "description": "Name of the presentation to add the slide to",
+                        },
+                        "header": {
+                            "type": "string",
+                            "description": "Section header title",
+                        },
+                        "subtitle": {
+                            "type": "string",
+                            "description": "Section header subtitle",
+                        }
+
+                    },
+                    "required": ["presentation_name", "header"],
+                },
+            ),
+            types.Tool(
                 name="add-slide-title-content",
                 description="Add a new slide with a title and content to an existing presentation",
                 inputSchema={
@@ -433,6 +457,28 @@ async def main(folder_path):
                 types.TextContent(
                     type="text",
                     text=f"Added slide '{title}' to presentation: {presentation_name}"
+                )
+            ]
+        elif name == "add-slide-section-header":
+            presentation_name = arguments.get("presentation_name")
+            header = arguments.get("header")
+            subtitle = arguments.get("subtitle")
+
+            if not all([presentation_name, header]):
+                raise ValueError("Missing required arguments")
+
+            if presentation_name not in presentation_manager.presentations:
+                raise ValueError(f"Presentation not found: {presentation_name}")
+
+            try:
+                slide = presentation_manager.add_section_header_slide(presentation_name, header, subtitle)
+            except Exception as e:
+                raise ValueError(f"Unable to add slide '{header}' to presentation: {presentation_name}")
+
+            return [
+                types.TextContent(
+                    type="text",
+                    text=f"Added slide '{header}' to presentation: {presentation_name}"
                 )
             ]
         elif name == "add-slide-title-with-table":
