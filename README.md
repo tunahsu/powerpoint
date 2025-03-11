@@ -2,6 +2,10 @@
 
 A MCP server project that creates powerpoint presentations
 
+<a href="https://glama.ai/mcp/servers/h1wl85c8gs">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/h1wl85c8gs/badge" alt="Powerpoint Server MCP server" />
+</a>
+
 ## Components
 
 ### Tools
@@ -38,10 +42,6 @@ The server implements multiple tools:
 - ```generate-and-save-image```: Generates an image for the presentation using a FLUX model
   - Takes "prompt" and "file_name" as required string arguments
   - Creates an image using the free FLUX model on TogetherAI (requires an API key)
-
-
-
-
 
 ## Configuration
 
@@ -91,7 +91,6 @@ On Windows: `%APPDATA%/Claude/claude_desktop_config.json`
 - ```--directory```: the path where you cloned the repo above
 - ```--folder-path```: the path where powerpoint decks and images will be saved to. Also the path where you should place any images you want the MCP server to use.
 
-
 ```
   # Add the server to your claude_desktop_config.json
   "mcpServers": {
@@ -127,7 +126,6 @@ Assuming you have SQLite MCP Server installed.
 Review 2024 Sales Data table. Create a presentation showing current trends, use tables and charts as appropriate
 
 ```
-
 
 # License
 
