@@ -480,7 +480,7 @@ async def main(folder_path):
             try:
                 slide = presentation_manager.add_picture_with_caption_slide(presentation_name, title, str(safe_file_path), caption)
             except Exception as e:
-                raise ValueError(f"Unable to add slide with caption and picture layout to {presentation_name}.pptx")
+                raise ValueError(f"Unable to add slide with caption and picture layout to {presentation_name}.pptx. Error: {str(e)}")
 
             return [types.TextContent(
                 type="text",
