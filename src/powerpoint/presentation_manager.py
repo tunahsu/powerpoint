@@ -1,7 +1,9 @@
+import os
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.util import Inches
 from pptx.slide import Slide
+from PIL import Image, UnidentifiedImageError
 
 import logging
 from typing import Literal, Union, List, Dict, Any
@@ -159,30 +161,93 @@ class PresentationManager:
 
     def add_picture_with_caption_slide(self, presentation_name: str, title: str,
                                        image_path: str, caption_text: str) -> Slide:
+
         """
         For the given presentation builds a slide with the picture with caption template.
+        Maintains the image's aspect ratio by adjusting the picture object after insertion.
+        Args:
+            presentation_name: The presentation to add the slide to
+            title: The title of the slide
+            image_path: The path to the image to insert
+            caption_text: The caption content
+
         """
         try:
             prs = self.presentations[presentation_name]
         except KeyError as e:
             raise ValueError(f"Presentation '{presentation_name}' not found")
-        slide_master = prs.slide_master
 
-        # Add a new slide with layout 8 (Caption with Picture)
-        slide_layout = prs.slide_layouts[self.SLIDE_LAYOUT_PICTURE_WITH_CAPTION]
-        slide = prs.slides.add_slide(slide_layout)
-
+        # Add a new slide with layout 8 (Picture with Caption)
+        try:
+            slide_layout = prs.slide_layouts[self.SLIDE_LAYOUT_PICTURE_WITH_CAPTION]
+            slide = prs.slides.add_slide(slide_layout)
+        except IndexError as e:
+            error_message = f"Slide Index does not exist. Error: {str(e)}"
+            raise ValueError(error_message)
         # Set the title
         title_shape = slide.shapes.title
         title_shape.text = title
 
-        # Insert the picture
-        placeholder = slide.placeholders[1]
-        picture = placeholder.insert_picture(image_path)
+        # Get the image placeholder
+        try:
+            placeholder = slide.placeholders[1]
+        except IndexError as e:
+            error_message = f"Placeholder index does not exist. Error {str(e)}"
+            raise ValueError(error_message)
+
+        # Insert the picture into the placeholder
+        if not os.path.exists(image_path):
+            raise FileNotFoundError(f"Image not found: {image_path}")
+        try:
+            picture = placeholder.insert_picture(image_path)
+        except FileNotFoundError as e:
+            error_message = f"Image not found during insertion: {str(e)}"
+            raise
+        except UnidentifiedImageError as e:
+            error_message = f"Image file {image_path} is not a valid image: {str(e)}"
+            raise ValueError(error_message)
+        except Exception as e:
+            error_message = f"An unexpected error occured during picture insertion: {str(e)}"
+            raise
+
+        # Get placeholder dimensions after picture insertion
+        available_width = picture.width
+        available_height = picture.height
+
+        # Get original image dimensions directly from the picture object
+        image_width, image_height = picture.image.size
+
+        # Calculate aspect ratios
+        placeholder_aspect_ratio = float(available_width) / float(available_height)
+        image_aspect_ratio = float(image_width) / float(image_height)
+
+        # Store initial position
+        pos_left, pos_top = picture.left, picture.top
+
+        # Remove any cropping
+        picture.crop_top = 0
+        picture.crop_left = 0
+        picture.crop_bottom = 0
+        picture.crop_right = 0
+
+        # Adjust picture dimensions based on aspect ratio comparison
+        if placeholder_aspect_ratio > image_aspect_ratio:
+            # Placeholder is wider than image - adjust width down while maintaining height
+            picture.width = int(image_aspect_ratio * available_height)
+            picture.height = available_height
+        else:
+            # Placeholder is taller than image - adjust height down while maintaining width
+            picture.height = int(available_width / image_aspect_ratio)
+            picture.width = available_width
+
+        # Center the image within the available space
+        picture.left = pos_left + int((available_width - picture.width) / 2)
+        picture.top = pos_top + int((available_height - picture.height) / 2)
 
         # Set the caption
         caption = slide.placeholders[2]
         caption.text = caption_text
+
         return slide
 
     def add_title_with_content_slide(self, presentation_name: str, title: str, content: str) -> Slide:
