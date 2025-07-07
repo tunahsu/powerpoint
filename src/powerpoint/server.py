@@ -1,4 +1,5 @@
 import os
+import requests
 from mcp.server import Server, NotificationOptions
 from mcp.server.models import InitializationOptions
 import mcp.server.stdio
@@ -15,6 +16,7 @@ logger.info("Starting MCP Powerpoint Server")
 
 BACKUP_FILE_NAME = 'backup.pptx'
 
+
 def sanitize_path(base_path: str, file_name: str) -> str:
     """
     Ensure that the resulting path doesn't escape outside the base directory
@@ -25,11 +27,14 @@ def sanitize_path(base_path: str, file_name: str) -> str:
     normalized_path = os.path.normpath(joined_path)
 
     if not normalized_path.startswith(base_path):
-        raise ValueError(f"Invalid path. Attempted to access location outside allowed directory.")
+        raise ValueError(
+            f"Invalid path. Attempted to access location outside allowed directory."
+        )
 
     return normalized_path
 
-async def main(folder_path):
+
+async def main(folder_path, owui_url, owui_token):
     logger.info(f"Starting Powerpoint MCP Server")
     presentation_manager = PresentationManager()
     chart_manager = ChartManager()
@@ -38,21 +43,23 @@ async def main(folder_path):
     logger.debug("Registering Handlers")
     path = folder_path
 
-
     @server.list_tools()
     async def handle_list_tools() -> list[types.Tool]:
         """List available PowerPoint tools."""
         return [
             types.Tool(
                 name="create-presentation",
-                description="This tool starts the process of generating a new powerpoint presentation with the name given "
-                            "by the user. Use this tool when the user requests to create or generate a new presentation.",
+                description=
+                "This tool starts the process of generating a new powerpoint presentation with the name given "
+                "by the user. Use this tool when the user requests to create or generate a new presentation.",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "name": {
-                            "type": "string",
-                            "description": "Name of the presentation (without .pptx extension)",
+                            "type":
+                            "string",
+                            "description":
+                            "Name of the presentation (without .pptx extension)",
                         },
                     },
                     "required": ["name"],
@@ -60,19 +67,24 @@ async def main(folder_path):
             ),
             types.Tool(
                 name="generate-and-save-image",
-                description="Generates an image using a FLUX model and save the image to the specified path. The tool "
-                            "will return a PNG file path. It should be used when the user asks to generate or create an "
-                            "image or a picture.",
+                description=
+                "Generates an image using a Gemini model and save the image to the specified path. The tool "
+                "will return a PNG file path. It should be used when the user asks to generate or create an "
+                "image or a picture.",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "prompt": {
-                            "type": "string",
-                            "description": "Description of the image to generate in the form of a prompt.",
+                            "type":
+                            "string",
+                            "description":
+                            "Description of the image to generate in the form of a prompt.",
                         },
                         "file_name": {
-                            "type": "string",
-                            "description": "Filename of the image. Include the extension of .png",
+                            "type":
+                            "string",
+                            "description":
+                            "Filename of the image. Include the extension of .png",
                         },
                     },
                     "required": ["prompt", "file_name"],
@@ -80,14 +92,17 @@ async def main(folder_path):
             ),
             types.Tool(
                 name="add-slide-title-only",
-                description="This tool adds a new title slide to the presentation you are working on. The tool doesn't "
-                            "return anything. It requires the presentation_name to work on.",
+                description=
+                "This tool adds a new title slide to the presentation you are working on. The tool doesn't "
+                "return anything. It requires the presentation_name to work on.",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "presentation_name": {
-                            "type": "string",
-                            "description": "Name of the presentation to add the slide to",
+                            "type":
+                            "string",
+                            "description":
+                            "Name of the presentation to add the slide to",
                         },
                         "title": {
                             "type": "string",
@@ -99,14 +114,17 @@ async def main(folder_path):
             ),
             types.Tool(
                 name="add-slide-section-header",
-                description="This tool adds a section header (a.k.a segue) slide to the presentation you are working on. The tool doesn't "
-                            "return anything. It requires the presentation_name to work on.",
+                description=
+                "This tool adds a section header (a.k.a segue) slide to the presentation you are working on. The tool doesn't "
+                "return anything. It requires the presentation_name to work on.",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "presentation_name": {
-                            "type": "string",
-                            "description": "Name of the presentation to add the slide to",
+                            "type":
+                            "string",
+                            "description":
+                            "Name of the presentation to add the slide to",
                         },
                         "header": {
                             "type": "string",
@@ -116,32 +134,36 @@ async def main(folder_path):
                             "type": "string",
                             "description": "Section header subtitle",
                         }
-
                     },
                     "required": ["presentation_name", "header"],
                 },
             ),
             types.Tool(
                 name="add-slide-title-content",
-                description="Add a new slide with a title and content to an existing presentation",
+                description=
+                "Add a new slide with a title and content to an existing presentation",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "presentation_name": {
-                            "type": "string",
-                            "description": "Name of the presentation to add the slide to",
+                            "type":
+                            "string",
+                            "description":
+                            "Name of the presentation to add the slide to",
                         },
                         "title": {
                             "type": "string",
                             "description": "Title of the slide",
                         },
                         "content": {
-                            "type": "string",
-                            "description": "Content/body text of the slide. "
-                                           "Separate main points with a single carriage return character."
-                                           "Make sub-points with tab character."
-                                           "Do not use bullet points, asterisks or dashes for points."
-                                           "Max main points is 4"
+                            "type":
+                            "string",
+                            "description":
+                            "Content/body text of the slide. "
+                            "Separate main points with a single carriage return character."
+                            "Make sub-points with tab character."
+                            "Do not use bullet points, asterisks or dashes for points."
+                            "Max main points is 4"
                         },
                     },
                     "required": ["presentation_name", "title", "content"],
@@ -149,14 +171,18 @@ async def main(folder_path):
             ),
             types.Tool(
                 name="add-slide-comparison",
-                description="Add a new a comparison slide with title and comparison content. Use when you wish to "
-                            "compare two concepts",
+                description=
+                "Add a new a comparison slide with title and comparison content. Use when you wish to "
+                "compare two concepts",
                 inputSchema={
-                    "type": "object",
+                    "type":
+                    "object",
                     "properties": {
                         "presentation_name": {
-                            "type": "string",
-                            "description": "Name of the presentation to add the slide to",
+                            "type":
+                            "string",
+                            "description":
+                            "Name of the presentation to add the slide to",
                         },
                         "title": {
                             "type": "string",
@@ -167,39 +193,49 @@ async def main(folder_path):
                             "description": "Title of the left concept",
                         },
                         "left_side_content": {
-                            "type": "string",
-                            "description": "Content/body text of left concept. "
-                                           "Separate main points with a single carriage return character."
-                                           "Make sub-points with tab character."
-                                           "Do not use bullet points, asterisks or dashes for points."
-                                           "Max main points is 4"
+                            "type":
+                            "string",
+                            "description":
+                            "Content/body text of left concept. "
+                            "Separate main points with a single carriage return character."
+                            "Make sub-points with tab character."
+                            "Do not use bullet points, asterisks or dashes for points."
+                            "Max main points is 4"
                         },
                         "right_side_title": {
                             "type": "string",
                             "description": "Title of the right concept",
                         },
                         "right_side_content": {
-                            "type": "string",
-                            "description": "Content/body text of right concept. "
-                                           "Separate main points with a single carriage return character."
-                                           "Make sub-points with tab character."
-                                           "Do not use bullet points, asterisks or dashes for points."
-                                           "Max main points is 4"
+                            "type":
+                            "string",
+                            "description":
+                            "Content/body text of right concept. "
+                            "Separate main points with a single carriage return character."
+                            "Make sub-points with tab character."
+                            "Do not use bullet points, asterisks or dashes for points."
+                            "Max main points is 4"
                         },
                     },
-                    "required": ["presentation_name", "title", "left_side_title", "left_side_content",
-                                 "right_side_title", "right_side_content"],
+                    "required": [
+                        "presentation_name", "title", "left_side_title",
+                        "left_side_content", "right_side_title",
+                        "right_side_content"
+                    ],
                 },
             ),
             types.Tool(
                 name="add-slide-title-with-table",
-                description="Add a new slide with a title and table containing the provided data",
+                description=
+                "Add a new slide with a title and table containing the provided data",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "presentation_name": {
-                            "type": "string",
-                            "description": "Name of the presentation to add the slide to",
+                            "type":
+                            "string",
+                            "description":
+                            "Name of the presentation to add the slide to",
                         },
                         "title": {
                             "type": "string",
@@ -207,18 +243,23 @@ async def main(folder_path):
                         },
                         "data": {
                             "type": "object",
-                            "description": "Table data object with headers and rows",
+                            "description":
+                            "Table data object with headers and rows",
                             "properties": {
                                 "headers": {
                                     "type": "array",
-                                    "items": {"type": "string"},
+                                    "items": {
+                                        "type": "string"
+                                    },
                                     "description": "Array of column headers"
                                 },
                                 "rows": {
                                     "type": "array",
                                     "items": {
                                         "type": "array",
-                                        "items": {"type": ["string", "number"]},
+                                        "items": {
+                                            "type": ["string", "number"]
+                                        },
                                     },
                                     "description": "Array of row data arrays"
                                 }
@@ -231,13 +272,16 @@ async def main(folder_path):
             ),
             types.Tool(
                 name="add-slide-title-with-chart",
-                description="Add a new slide with a title and chart. The chart type will be automatically selected based on the data structure.",
+                description=
+                "Add a new slide with a title and chart. The chart type will be automatically selected based on the data structure.",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "presentation_name": {
-                            "type": "string",
-                            "description": "Name of the presentation to add the slide to",
+                            "type":
+                            "string",
+                            "description":
+                            "Name of the presentation to add the slide to",
                         },
                         "title": {
                             "type": "string",
@@ -248,9 +292,13 @@ async def main(folder_path):
                             "description": "Chart data structure",
                             "properties": {
                                 "categories": {
-                                    "type": "array",
-                                    "items": {"type": ["string", "number"]},
-                                    "description": "X-axis categories or labels (optional)"
+                                    "type":
+                                    "array",
+                                    "items": {
+                                        "type": ["string", "number"]
+                                    },
+                                    "description":
+                                    "X-axis categories or labels (optional)"
                                 },
                                 "series": {
                                     "type": "array",
@@ -258,23 +306,28 @@ async def main(folder_path):
                                         "type": "object",
                                         "properties": {
                                             "name": {
-                                                "type": "string",
-                                                "description": "Name of the data series"
+                                                "type":
+                                                "string",
+                                                "description":
+                                                "Name of the data series"
                                             },
                                             "values": {
-                                                "type": "array",
+                                                "type":
+                                                "array",
                                                 "items": {
-                                                    "oneOf": [
-                                                        {"type": "number"},
-                                                        {
-                                                            "type": "array",
-                                                            "items": {"type": "number"},
-                                                            "minItems": 2,
-                                                            "maxItems": 2
-                                                        }
-                                                    ]
+                                                    "oneOf": [{
+                                                        "type": "number"
+                                                    }, {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "number"
+                                                        },
+                                                        "minItems": 2,
+                                                        "maxItems": 2
+                                                    }]
                                                 },
-                                                "description": "Values for the series. Can be simple numbers or [x,y] pairs for scatter plots"
+                                                "description":
+                                                "Values for the series. Can be simple numbers or [x,y] pairs for scatter plots"
                                             }
                                         },
                                         "required": ["name", "values"]
@@ -297,34 +350,42 @@ async def main(folder_path):
             ),
             types.Tool(
                 name="add-slide-picture-with-caption",
-                description="Add a new slide with a picture and caption to an existing presentation",
+                description=
+                "Add a new slide with a picture and caption to an existing presentation",
                 inputSchema={
-                    "type": "object",
+                    "type":
+                    "object",
                     "properties": {
                         "presentation_name": {
-                            "type": "string",
-                            "description": "Name of the presentation to add the slide to",
+                            "type":
+                            "string",
+                            "description":
+                            "Name of the presentation to add the slide to",
                         },
                         "title": {
                             "type": "string",
                             "description": "Title of the slide",
                         },
                         "caption": {
-                            "type": "string",
-                            "description": "Caption text to appear below the picture"
+                            "type":
+                            "string",
+                            "description":
+                            "Caption text to appear below the picture"
                         },
                         "image_path": {
                             "type": "string",
                             "description": "Path to the image file to insert"
                         }
                     },
-                    "required": ["presentation_name", "title", "caption", "image_path"],
+                    "required":
+                    ["presentation_name", "title", "caption", "image_path"],
                 },
             ),
             types.Tool(
                 name="open-presentation",
-                description="Opens an existing presentation and saves a copy to a new file for backup. Use this tool when "
-                            "the user requests to open a presentation that has already been created.",
+                description=
+                "Opens an existing presentation and saves a copy to a new file for backup. Use this tool when "
+                "the user requests to open a presentation that has already been created.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -333,8 +394,10 @@ async def main(folder_path):
                             "description": "Name of the presentation to open",
                         },
                         "output_path": {
-                            "type": "string",
-                            "description": "Path where to save the presentation (optional)",
+                            "type":
+                            "string",
+                            "description":
+                            "Path where to save the presentation (optional)",
                         },
                     },
                     "required": ["presentation_name"],
@@ -342,8 +405,9 @@ async def main(folder_path):
             ),
             types.Tool(
                 name="save-presentation",
-                description="Save the presentation to a file. Always use this tool at the end of any process that has "
-                            "added slides to a presentation.",
+                description=
+                "Save the presentation to a file. Always use this tool at the end of any process that has "
+                "added slides to a presentation.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -352,8 +416,10 @@ async def main(folder_path):
                             "description": "Name of the presentation to save",
                         },
                         "output_path": {
-                            "type": "string",
-                            "description": "Path where to save the presentation (optional)",
+                            "type":
+                            "string",
+                            "description":
+                            "Path where to save the presentation (optional)",
                         },
                     },
                     "required": ["presentation_name"],
@@ -361,10 +427,9 @@ async def main(folder_path):
             ),
         ]
 
-
     @server.call_tool()
     async def handle_call_tool(
-            name: str, arguments: dict | None
+        name: str, arguments: dict | None
     ) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
         """Handle PowerPoint tool execution requests."""
         if not arguments:
@@ -384,7 +449,8 @@ async def main(folder_path):
             try:
                 prs = Presentation(safe_file_path)
             except Exception as e:
-                raise ValueError(f"Unable to load {safe_file_path}. Error: {str(e)}")
+                raise ValueError(
+                    f"Unable to load {safe_file_path}. Error: {str(e)}")
 
             # Create a backup of the original file
             file_name = BACKUP_FILE_NAME
@@ -396,15 +462,15 @@ async def main(folder_path):
             try:
                 prs.save(safe_file_path)
             except Exception as e:
-                raise ValueError(f"Unable to save {safe_file_path}. Error: {str(e)}")
+                raise ValueError(
+                    f"Unable to save {safe_file_path}. Error: {str(e)}")
 
             presentation_manager.presentations[presentation_name] = prs
 
             return [
                 types.TextContent(
                     type="text",
-                    text=f"Opened presentation: {presentation_name}"
-                )
+                    text=f"Opened presentation: {presentation_name}")
             ]
         elif name == "generate-and-save-image":
             prompt = arguments.get("prompt")
@@ -418,19 +484,20 @@ async def main(folder_path):
                 raise ValueError("Missing required arguments")
 
             try:
-                saved_path = await vision_manager.generate_and_save_image(prompt, str(safe_file_path))
+                saved_path = await vision_manager.generate_and_save_image(
+                    prompt, str(safe_file_path))
                 return [
                     types.TextContent(
                         type="text",
-                        text=f"Successfully generated and saved image to: {saved_path}"
+                        text=
+                        f"Successfully generated and saved image to: {saved_path}"
                     )
                 ]
             except Exception as e:
                 return [
                     types.TextContent(
                         type="text",
-                        text=f"Failed to generate image: {str(e)}"
-                    )
+                        text=f"Failed to generate image: {str(e)}")
                 ]
         elif name == "add-slide-comparison":
             # Get arguments
@@ -441,22 +508,31 @@ async def main(folder_path):
             right_side_title = arguments["right_side_title"]
             right_side_content = arguments["right_side_content"]
 
-            if not all([presentation_name, title, left_side_title, left_side_content,
-                        right_side_title, right_side_content]):
+            if not all([
+                    presentation_name, title, left_side_title,
+                    left_side_content, right_side_title, right_side_content
+            ]):
                 raise ValueError("Missing required arguments")
 
             if presentation_name not in presentation_manager.presentations:
-                raise ValueError(f"Presentation not found: {presentation_name}")
+                raise ValueError(
+                    f"Presentation not found: {presentation_name}")
             try:
-                slide = presentation_manager.add_comparison_slide(presentation_name, title, left_side_title,
-                                                                  left_side_content, right_side_title, right_side_content)
+                slide = presentation_manager.add_comparison_slide(
+                    presentation_name, title, left_side_title,
+                    left_side_content, right_side_title, right_side_content)
             except Exception as e:
-                raise ValueError(f"Unable to add comparison slide to {presentation_name}.pptx")
+                raise ValueError(
+                    f"Unable to add comparison slide to {presentation_name}.pptx"
+                )
 
-            return [types.TextContent(
-                type="text",
-                text=f"Successfully added comparison slide {title} to {presentation_name}.pptx"
-            )]
+            return [
+                types.TextContent(
+                    type="text",
+                    text=
+                    f"Successfully added comparison slide {title} to {presentation_name}.pptx"
+                )
+            ]
 
         elif name == "add-slide-picture-with-caption":
 
@@ -470,7 +546,8 @@ async def main(folder_path):
                 raise ValueError("Missing required arguments")
 
             if presentation_name not in presentation_manager.presentations:
-                raise ValueError(f"Presentation not found: {presentation_name}")
+                raise ValueError(
+                    f"Presentation not found: {presentation_name}")
 
             try:
                 safe_file_path = sanitize_path(folder_path, file_name)
@@ -478,14 +555,24 @@ async def main(folder_path):
                 raise ValueError(f"Invalid file path: {str(e)}")
 
             try:
-                slide = presentation_manager.add_picture_with_caption_slide(presentation_name, title, str(safe_file_path), caption)
+                slide = presentation_manager.add_picture_with_caption_slide(
+                    presentation_name, title, str(safe_file_path), caption)
             except Exception as e:
-                raise ValueError(f"Unable to add slide with caption and picture layout to {presentation_name}.pptx. Error: {str(e)}")
+                raise ValueError(
+                    f"Unable to add slide with caption and picture layout to {presentation_name}.pptx. Error: {str(e)}"
+                )
+            finally:
+                # Clean up the image file if it exists
+                if os.path.exists(safe_file_path):
+                    os.remove(safe_file_path)  # Clean up the image file
 
-            return [types.TextContent(
-                type="text",
-                text=f"Successfully added slide with caption and picture layout to {presentation_name}.pptx"
-            )]
+            return [
+                types.TextContent(
+                    type="text",
+                    text=
+                    f"Successfully added slide with caption and picture layout to {presentation_name}.pptx"
+                )
+            ]
 
         elif name == "create-presentation":
 
@@ -498,13 +585,14 @@ async def main(folder_path):
             try:
                 presentation_manager.presentations[presentation_name] = prs
             except KeyError as e:
-                raise ValueError(f"Unable to add {presentation_name} to presentation. Error: {str(e)}")
+                raise ValueError(
+                    f"Unable to add {presentation_name} to presentation. Error: {str(e)}"
+                )
 
             return [
                 types.TextContent(
                     type="text",
-                    text=f"Created new presentation: {presentation_name}"
-                )
+                    text=f"Created new presentation: {presentation_name}")
             ]
 
         elif name == "add-slide-title-content":
@@ -516,17 +604,22 @@ async def main(folder_path):
                 raise ValueError("Missing required arguments")
 
             if presentation_name not in presentation_manager.presentations:
-                raise ValueError(f"Presentation not found: {presentation_name}")
+                raise ValueError(
+                    f"Presentation not found: {presentation_name}")
 
             try:
-                slide = presentation_manager.add_title_with_content_slide(presentation_name, title, content)
+                slide = presentation_manager.add_title_with_content_slide(
+                    presentation_name, title, content)
             except Exception as e:
-                raise ValueError(f"Unable to add slide '{title}' to presentation: {presentation_name}")
+                raise ValueError(
+                    f"Unable to add slide '{title}' to presentation: {presentation_name}"
+                )
 
             return [
                 types.TextContent(
                     type="text",
-                    text=f"Added slide '{title}' to presentation: {presentation_name}"
+                    text=
+                    f"Added slide '{title}' to presentation: {presentation_name}"
                 )
             ]
         elif name == "add-slide-section-header":
@@ -538,17 +631,22 @@ async def main(folder_path):
                 raise ValueError("Missing required arguments")
 
             if presentation_name not in presentation_manager.presentations:
-                raise ValueError(f"Presentation not found: {presentation_name}")
+                raise ValueError(
+                    f"Presentation not found: {presentation_name}")
 
             try:
-                slide = presentation_manager.add_section_header_slide(presentation_name, header, subtitle)
+                slide = presentation_manager.add_section_header_slide(
+                    presentation_name, header, subtitle)
             except Exception as e:
-                raise ValueError(f"Unable to add slide '{header}' to presentation: {presentation_name}")
+                raise ValueError(
+                    f"Unable to add slide '{header}' to presentation: {presentation_name}"
+                )
 
             return [
                 types.TextContent(
                     type="text",
-                    text=f"Added slide '{header}' to presentation: {presentation_name}"
+                    text=
+                    f"Added slide '{header}' to presentation: {presentation_name}"
                 )
             ]
         elif name == "add-slide-title-with-table":
@@ -560,7 +658,8 @@ async def main(folder_path):
                 raise ValueError("Missing required arguments")
 
             if presentation_name not in presentation_manager.presentations:
-                raise ValueError(f"Presentation not found: {presentation_name}")
+                raise ValueError(
+                    f"Presentation not found: {presentation_name}")
 
             # Validate table data structure
             headers = table_data.get("headers", [])
@@ -574,16 +673,21 @@ async def main(folder_path):
 
             # Validate that all rows match header length
             if not all(len(row) == len(headers) for row in rows):
-                raise ValueError("All rows must have the same number of columns as headers")
+                raise ValueError(
+                    "All rows must have the same number of columns as headers")
             try:
-                slide = presentation_manager.add_table_slide(presentation_name, title, headers, rows)
+                slide = presentation_manager.add_table_slide(
+                    presentation_name, title, headers, rows)
             except Exception as e:
-                raise ValueError(f"Unable to add slide '{title}' with a table to presentation: {presentation_name}")
+                raise ValueError(
+                    f"Unable to add slide '{title}' with a table to presentation: {presentation_name}"
+                )
 
             return [
                 types.TextContent(
                     type="text",
-                    text=f"Added slide '{title}' with a table to presentation: {presentation_name}"
+                    text=
+                    f"Added slide '{title}' with a table to presentation: {presentation_name}"
                 )
             ]
         elif name == "add-slide-title-with-chart":
@@ -595,7 +699,8 @@ async def main(folder_path):
                 raise ValueError("Missing required arguments")
 
             if presentation_name not in presentation_manager.presentations:
-                raise ValueError(f"Presentation not found: {presentation_name}")
+                raise ValueError(
+                    f"Presentation not found: {presentation_name}")
 
             # Get the presentation and create a new slide
             prs = presentation_manager.presentations[presentation_name]
@@ -608,23 +713,28 @@ async def main(folder_path):
 
             # Determine the best chart type for the data
             try:
-                chart_type, chart_format = chart_manager.determine_chart_type(chart_data)
+                chart_type, chart_format = chart_manager.determine_chart_type(
+                    chart_data)
             except Exception as e:
                 raise ValueError(f"Unable to determine chart type.")
 
             # Add the chart to the slide
             try:
-                chart = chart_manager.add_chart_to_slide(slide, chart_type, chart_data, chart_format)
-                chart_type_name = chart_type.name.lower().replace('xl_chart_type.', '')
+                chart = chart_manager.add_chart_to_slide(
+                    slide, chart_type, chart_data, chart_format)
+                chart_type_name = chart_type.name.lower().replace(
+                    'xl_chart_type.', '')
 
                 return [
                     types.TextContent(
                         type="text",
-                        text=f"Added slide '{title}' with a {chart_type_name} chart to presentation: {presentation_name}"
+                        text=
+                        f"Added slide '{title}' with a {chart_type_name} chart to presentation: {presentation_name}"
                     )
                 ]
             except Exception as e:
-                raise ValueError(f"Failed to create slide with chart: {str(e)}")
+                raise ValueError(
+                    f"Failed to create slide with chart: {str(e)}")
         elif name == "add-slide-title-only":
             presentation_name = arguments.get("presentation_name")
             title = arguments.get("title")
@@ -633,29 +743,34 @@ async def main(folder_path):
                 raise ValueError("Missing required arguments")
 
             if presentation_name not in presentation_manager.presentations:
-                raise ValueError(f"Presentation not found: {presentation_name}")
+                raise ValueError(
+                    f"Presentation not found: {presentation_name}")
 
             try:
-                slide = presentation_manager.add_title_slide(presentation_name, title)
+                slide = presentation_manager.add_title_slide(
+                    presentation_name, title)
             except Exception as e:
-                 raise ValueError(f"Unable to add '{title} to presentation: {presentation_name}. Error: {e}")
+                raise ValueError(
+                    f"Unable to add '{title} to presentation: {presentation_name}. Error: {e}"
+                )
 
             return [
                 types.TextContent(
                     type="text",
-                    text=f"Added slide '{title}' to presentation: {presentation_name}"
+                    text=
+                    f"Added slide '{title}' to presentation: {presentation_name}"
                 )
             ]
         elif name == "save-presentation":
             presentation_name = arguments.get("presentation_name")
             output_path = arguments.get("output_path")
 
-
             if not presentation_name:
                 raise ValueError("Missing presentation name")
 
             if presentation_name not in presentation_manager.presentations:
-                raise ValueError(f"Presentation not found: {presentation_name}")
+                raise ValueError(
+                    f"Presentation not found: {presentation_name}")
 
             prs = presentation_manager.presentations[presentation_name]
 
@@ -663,19 +778,38 @@ async def main(folder_path):
             if not output_path:
                 output_path = f"{presentation_name}.pptx"
 
-            file_path = os.path.join(path,output_path)
+            file_path = os.path.join(path, output_path)
             # Save the presentation
             try:
                 prs.save(file_path)
             except Exception as e:
-                raise ValueError(f"Unable to save the {presentation_name}. Error: {e}")
+                raise ValueError(
+                    f"Unable to save the {presentation_name}. Error: {e}")
 
-            return [
-                types.TextContent(
-                    type="text",
-                    text=f"Saved presentation to: {file_path}"
+            url = f"{owui_url}/api/v1/files/"
+            headers = {
+                "Authorization": f"Bearer {owui_token}",
+            }
+            with open(file_path, "rb") as file:
+                files = {
+                    "file":
+                    (os.path.basename(file_path), file,
+                     "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                     )
+                }
+                response = requests.post(url, headers=headers, files=files)
+            os.remove(file_path)  # Clean up the local file after upload
+            if response.status_code == 200:
+                file_url = f"{url.strip('/')}/{response.json().get('id', 'unknown')}/content"
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=f"Saved Open-WebUI with URL {file_url}")
+                ]
+            else:
+                raise ValueError(
+                    f"Failed to upload file to server. Status code: {response.status_code}, Response: {response.text}"
                 )
-            ]
 
         else:
             raise ValueError(f"Unknown tool: {name}")
